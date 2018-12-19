@@ -1,4 +1,4 @@
-package menbcom.wv.wvopencv;
+package com.example.robbesteynen.wv;
 import java.util.*;
 
 public class Circle {
