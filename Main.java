@@ -125,11 +125,13 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
         input = inputFrame.gray();
         // Rotate mRgba 90 degrees
         Size test = new Size(11,11);
-        Imgproc.GaussianBlur(input,input,test,0);
+        Imgproc.blur(input,input,test);
         Imgproc.threshold(input,input,200,255,Imgproc.THRESH_BINARY);
-        //Imgproc.erode(input,input,null,null,2);
-        //Imgproc.dilate(input,input,null,null,4);
-        //Imgproc.connectedComponents(input,labels,8);
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT,test);
+        Imgproc.erode(input,input,element,new org.opencv.core.Point(-1,-1) ,2);//Seems to slow the app down
+        Imgproc.dilate(input,input,element,new org.opencv.core.Point(-1,-1),4);//Seems to slow the app down
+        //Mat test2 = new Mat();
+        //Imgproc.connectedComponents(input,test2 , 8);
 
         Core.transpose(input, mRgbaT);
         Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0,0, 0);
