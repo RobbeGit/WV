@@ -1,11 +1,22 @@
 package menbcom.wv.wvopencv;
 
+import android.Manifest;
+import android.app.Activity;
 import java.util.ArrayList;
 
-public class MainActivity{
+import android.content.pm.PackageManager;
+import android.support.v4.content.*;
+import android.support.v4.app.*;
+import android.widget.Toast;
+import android.content.DialogInterface;
+import android.app.AlertDialog;
+
+
+public class MainActivity extends Activity {
     public ArrayList<Integer> startsequence = new ArrayList<>();
     public Integer startSeqLength = startsequence.size();
     public Integer frameLength = startSeqLength+10;
+    private static final int MY_CAMERA_REQUEST = 100;
 
     public Circle findIntersect(Circle a, Circle[] list){
         for(Circle circle : list){
@@ -17,8 +28,66 @@ public class MainActivity{
     public Boolean intersect(Circle a, Circle b){
         return Math.abs(Math.hypot(a.getCenterX()-b.getCenterX(),a.getCenterY()-b.getCenterY()))<a.getRadius()+b.getRadius();
     }
+
     public MainActivity(){
-       //TODO
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (!shouldShowRequestPermissionRationale(Manifest.permission.WRITE_CONTACTS)) {
+                showMessageOKCancel("You need to allow access to Camera",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                requestPermissions(new String[] {Manifest.permission.WRITE_CONTACTS},
+                                        MY_CAMERA_REQUEST);
+                            }
+                        });
+                return;
+            }
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    MY_CAMERA_REQUEST);
+            return;
+        }
+        else {
+            // TODO: Call main here
+        }
+    }
+
+    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(MainActivity.this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_CAMERA_REQUEST:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                    //TODO: Call main here
+
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+
+                    Toast.makeText(this, "CAMERA permission Denied.", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
     }
 
 /*
