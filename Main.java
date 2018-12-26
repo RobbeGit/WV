@@ -61,9 +61,81 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
 
 
     public Main() {
-        Log.i(TAG, "Instantiated new " + this.getClass());
+
+      /* I hope this works for the permission stuff.
+      Na een keer denyen kunnen users aangeven dat het nooit meer moet gevraagd worden,
+      daarmee de tweede if statement, zodat ze een melding krijgen dat je wel degelijk
+      permissie moet geven voordat de app iets kan doen.
+      */
+
+      // TODO testen
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            if (!shouldShowRequestPermissionRationale(Manifest.permission.WRITE_CONTACTS)) {
+                  showMessageOKCancel("You need to allow access to Camera", new DialogInterface.OnClickListener() {
+                          @Override
+                          public void onClick(DialogInterface dialog, int which) {
+                              requestPermissions(new String[] {Manifest.permission.WRITE_CONTACTS},MY_CAMERA_REQUEST);
+                          }
+                      });
+              return;
+            }
+
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_CAMERA_REQUEST);
+            return;
+        }
+        else {
+
+          /* IN CASE DAT DIT MAIN DEEL OOIT WORDT AANGEPAST
+          - PAS HET OOK AAN IN onRequestPermissionsResult*/
+            Log.i(TAG, "Instantiated new " + this.getClass());
+        }
+
     }
 
+/* Geeft Message indien de gebruiker heeft aangegeven nooit meer om
+    perissie te vragen */
+
+    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(MainActivity.this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+/* Nog een extra functie nodig voor permissies aanvragen
+    */
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_CAMERA_REQUEST:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                    // NAMELIK HIER - Zie public main //
+
+                    Log.i(TAG, "Instantiated new " + this.getClass());
+
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+
+                    Toast.makeText(this, "CAMERA permission Denied.", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+    }
 
 
     @Override
@@ -147,6 +219,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
     public ArrayList<Integer> startsequence = new ArrayList<>();
     public Integer startSeqLength = startsequence.size();
     public Integer frameLength = startSeqLength+10;
+    private static final int MY_CAMERA_REQUEST = 100;
 
     public Circle findIntersect(Circle a, Circle[] list){
         for(Circle circle : list){
@@ -158,10 +231,6 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
     public Boolean intersect(Circle a, Circle b){
         return Math.abs(Math.hypot(a.getCenterX()-b.getCenterX(),a.getCenterY()-b.getCenterY()))<a.getRadius()+b.getRadius();
     }
-
-
-
-
 
 /*
 rom imutils import contours
