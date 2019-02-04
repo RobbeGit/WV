@@ -144,9 +144,9 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
             int height = labelled.height();
             int width = labelled.width();
              ArrayList<double[]> visited  = new ArrayList<>();
-            double[] a = new double[1];
-            a[0] = 0;
-            visited.add(a);
+            double[] b = new double[1];
+            b[0] = 0;
+            visited.add(b);
 
             for( iter = 0;iter < size;iter++){
                 double[] label = labelled.get(iter % width, iter - (iter % width));
