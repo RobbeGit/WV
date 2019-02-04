@@ -143,14 +143,17 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
             int iter;
             int height = labelled.height();
             int width = labelled.width();
-            int size = height*width;
+             ArrayList<double[]> visited  = new ArrayList<>();
+            double[] a = new double[1];
+            a[0] = 0;
+            visited.add(a);
 
-            for( iter = 0;iter < size;iter++){ //TODO find a way to only handle unique labels
-                double[] a = new double[0];
-                double [] label = labelled.get(iter % width, iter - (iter % width));
-                if(label ==a){
+            for( iter = 0;iter < size;iter++){
+                double[] label = labelled.get(iter % width, iter - (iter % width));
+                if(visited.contains(label)){ //TODO check if this handles unique labels correctly
                     continue;
                 }
+                visited.add(label);
 
                 Mat iterMask = Mat.zeros(input.size(), CvType.CV_8UC4);
                 //iterMask[labelled == label] = 255;//TODO find java equivalent
