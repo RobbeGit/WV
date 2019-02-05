@@ -158,7 +158,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
                 visited.add(label);
 
 
-                Mat iterMask = Mat.zeros(input.size(), CvType.CV_8UC4);
+                Mat iterMask = Mat.zeros(input.size(), CvType.CV_8UC1);
                 //iterMask[labelled == label] = 255;//TODO find java equivalent
                 int numPixels = countNonZero(iterMask);
 
