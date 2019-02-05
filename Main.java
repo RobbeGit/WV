@@ -1,7 +1,11 @@
 
 package ar.wv;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -37,7 +41,8 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
         // Used for logging success or failure messages
         private static final String TAG = "OCVSample::Activity";
 
-        // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
+
+    // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
         private CameraBridgeViewBase mOpenCvCameraView;
 
         // Used in Camera selection from menu (when implemented)
@@ -47,10 +52,12 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
         // These variables are used (at the moment) to fix camera orientation from 270degree to 0degree
         Mat input;
         Mat mask;
-        Mat mRgbaT;
-        Mat gray;
-        Mat blurred;
         Mat labelled;
+        int staleCheckIdx = 0;
+        public ArrayList<Integer> startsequence = new ArrayList<>();
+        public Integer startSeqLength = startsequence.size();
+        public Integer frameLength = startSeqLength+10;
+        private static final int PERMISSION_REQUEST_CAMERA = 0;
 
         private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
             @Override
@@ -69,11 +76,35 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
             }
         };
     public Main() {
-        Log.i(TAG, "Instantiated new " + this.getClass());
-    }
+        Log.i(TAG, "Instantiated new " + this.getClass());}
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+
+        if (requestCode == PERMISSION_REQUEST_CAMERA) {
+            // Request for camera permission.
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission has been granted.
+
+            } else {
+                this.finishAffinity();//quits the application
+            }
+        }
+
+    }
+    private void requestCameraPermission() {
+        // Permission has not been granted and must be requested.
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CAMERA);
+        }
+    @Override
         protected void onCreate(Bundle savedInstanceState) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestCameraPermission();
+        }
             Log.i(TAG, "called onCreate");
             super.onCreate(savedInstanceState);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -117,7 +148,6 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
         public void onCameraViewStarted(int width, int height) {
 
             input = new Mat(height, width, CvType.CV_8UC4);
-            mRgbaT = new Mat(width, width, CvType.CV_8UC4);
             labelled = new Mat(height,width,CvType.CV_8UC4);
         }
 
@@ -127,7 +157,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
 
         public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
-            // TODO variant op while true uit originele code; anders gaat het blijven crashen,
+
             input = inputFrame.gray();
             // Rotate mRgba 90 degrees
             Size test = new Size(11,11);
@@ -144,21 +174,27 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
             int height = labelled.height();
             int width = labelled.width();
             int size = height*width;
+            ArrayList<double[]> visited  = new ArrayList<>();
+            double[] b = new double[1];
+            b[0] = 0;
+            visited.add(b);
 
-            for( iter = 0;iter < size;iter++){ //TODO find a way to only handle unique labels
-                double[] a = new double[0];
-                double [] label = labelled.get(iter % width, iter - (iter % width));
-                if(label ==a){
+            for( iter = 0;iter < size;iter++){
+                double[] label = labelled.get(iter % width, iter - (iter % width));//TODO check how Mat.get works
+                if(visited.contains(label)){ //TODO check if this handles unique labels correctly
                     continue;
                 }
+                visited.add(label);
 
-                Mat iterMask = Mat.zeros(input.size(), CvType.CV_8UC4);
+
+                Mat iterMask = Mat.zeros(input.size(), CvType.CV_8UC1);
                 //iterMask[labelled == label] = 255;//TODO find java equivalent
-                int numPixels = countNonZero(iterMask);
 
-               if(numPixels>130 &&  numPixels < 2500){
+
+                int numPixels = countNonZero(iterMask);
+                if(numPixels>130 &&  numPixels < 2500){
                    add(mask,iterMask,mask);
-               }
+                }
             }
 
             ArrayList<MatOfPoint> contours = new ArrayList<>();
@@ -168,7 +204,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
                 Rect bound = Imgproc.boundingRect(cont);//TODO no idea if this should be used somewhere
                 Point cent = null;
                 float[] rad = null;
-                minEnclosingCircle(new MatOfPoint2f(cont.toArray()), cent, rad);
+                minEnclosingCircle(new MatOfPoint2f(cont.toArray()),cent, rad);
                 OPoint point = new OPoint(cent.x, cent.y);
                 OCircle circle = new OCircle(point, (double) rad[0]);
                 OCircle a = findIntersect(circle, lst);
@@ -188,7 +224,6 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
                     iterator.addDataList(0);
                 }
             }
-            int staleCheckIdx = 0;
             int lstLength = lst.size();
             ArrayList<OCircle> confirmedList = new ArrayList<>();
             ArrayList<FinishedEl> finishedList = new ArrayList<>();
@@ -200,9 +235,11 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
                 int dataLength = c.getDataList().size();
                 if(dataLength>startSeqLength){
                     if(c.isConfirmedSource(startsequence)){
-                        if(!c.getConfirmed()){
-                            confirmedList.add(c);
-                            c.setConfirmed(Boolean.TRUE);
+                        if(dataLength<frameLength) {
+                            if (!c.getConfirmed()) {
+                                confirmedList.add(c);
+                                c.setConfirmed(Boolean.TRUE);
+                            }
                         }
                     }else{
                         finishedList.add(new FinishedEl(c.getDataString(startSeqLength,frameLength),c));
@@ -215,7 +252,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
                     lst.remove(staleCheckIdx);
                 }
             }
-            staleCheckIdx+=1; //TODO is useless zolang er geen variant op while True is
+            staleCheckIdx+=1; //TODO globale variable might get it to work, nog controleren
             Mat image=null;
             Scalar color = new Scalar(0,0,255);
             for(OCircle c:confirmedList){
@@ -229,13 +266,10 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
            // Core.transpose(input, mRgbaT);
            // Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0,0, 0);
            // Core.flip(mRgbaF, input, 1 );
-                return image; 
+                return image;
         }
 
-        public ArrayList<Integer> startsequence = new ArrayList<>();
-        public Integer startSeqLength = startsequence.size();
-        public Integer frameLength = startSeqLength+10;
-        private static final int MY_CAMERA_REQUEST = 100;
+
 
         public OCircle findIntersect(OCircle a, ArrayList<OCircle> list){
             for(OCircle circle : list){
