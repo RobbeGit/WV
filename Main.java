@@ -1,11 +1,14 @@
 
 package ar.wv;
-
+ main
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+
+import android.os.Bundle;
+RobbeGit-zonderpermission
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -42,7 +45,8 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
         private static final String TAG = "OCVSample::Activity";
 
 
-    // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
+        // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
+
         private CameraBridgeViewBase mOpenCvCameraView;
 
         // Used in Camera selection from menu (when implemented)
@@ -57,6 +61,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
         public ArrayList<Integer> startsequence = new ArrayList<>();
         public Integer startSeqLength = startsequence.size();
         public Integer frameLength = startSeqLength+10;
+
         private static final int PERMISSION_REQUEST_CAMERA = 0;
 
         private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -76,6 +81,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
             }
         };
     public Main() {
+
         Log.i(TAG, "Instantiated new " + this.getClass());}
 
     @Override
@@ -105,6 +111,7 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
                 != PackageManager.PERMISSION_GRANTED) {
             requestCameraPermission();
         }
+
             Log.i(TAG, "called onCreate");
             super.onCreate(savedInstanceState);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -191,10 +198,12 @@ public class Main extends AppCompatActivity implements CvCameraViewListener2 {
                 //iterMask[labelled == label] = 255;//TODO find java equivalent
 
 
+
                 int numPixels = countNonZero(iterMask);
                 if(numPixels>130 &&  numPixels < 2500){
                    add(mask,iterMask,mask);
                 }
+
             }
 
             ArrayList<MatOfPoint> contours = new ArrayList<>();
